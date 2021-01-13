@@ -38,50 +38,12 @@ function newHash() {
 }
 
 /**
- * Takes all given arguments and hashes them.
- *
- * @param args - Byte arrays to hash.
- * @returns - The final hash as a byte array.
- */
-export function hashAll(...args: Uint8Array[]): Uint8Array {
-  const hasher = newHash();
-  for (let i = 0; i < args.length; i++) {
-    blake.blake2bUpdate(hasher, args[i]);
-  }
-  return blake.blake2bFinal(hasher);
-}
-
-/**
- * Hash the given data key.
- *
- * @param datakey - Datakey to hash.
- * @returns - Hash of the datakey.
- */
-export function hashDataKey(datakey: string): Uint8Array {
-  return hashAll(encodeString(datakey));
-}
-
-/**
- * Hashes the given registry entry.
- *
- * @param registryEntry - Registry entry to hash.
- * @returns - Hash of the registry entry.
- */
-export function hashRegistryEntry(registryEntry: RegistryEntry): Uint8Array {
-  return hashAll(
-    hashDataKey(registryEntry.datakey),
-    encodeString(registryEntry.data),
-    encodeBigintAsUint64(registryEntry.revision)
-  );
-}
-
-/**
  * Converts the given number into a uint8 array
  *
  * @param num - Number to encode.
  * @returns - Number encoded as a byte array.
  */
-function encodeNumber(num: number): Uint8Array {
+export function encodeNumber(num: number): Uint8Array {
   const encoded = new Uint8Array(8);
   for (let index = 0; index < encoded.length; index++) {
     const byte = num & 0xff;
@@ -117,7 +79,7 @@ export function encodeBigintAsUint64(int: bigint): Uint8Array {
  * @param str - String to encode.
  * @returns - String encoded as a byte array.
  */
-function encodeString(str: string): Uint8Array {
+export function encodeString(str: string): Uint8Array {
   const encoded = new Uint8Array(8 + str.length);
   encoded.set(encodeNumber(str.length));
   encoded.set(stringToUint8Array(str), 8);
@@ -171,6 +133,44 @@ export function genKeyPairFromSeed(seed: string): KeyPair {
   seed = pkcs5.pbkdf2(seed, "", 1000, 32, md.sha256.create());
   const { publicKey, privateKey } = pki.ed25519.generateKeyPair({ seed });
   return { publicKey: toHexString(publicKey), privateKey: toHexString(privateKey) };
+}
+
+/**
+ * Takes all given arguments and hashes them.
+ *
+ * @param args - Byte arrays to hash.
+ * @returns - The final hash as a byte array.
+ */
+export function hashAll(...args: Uint8Array[]): Uint8Array {
+  const hasher = newHash();
+  for (let i = 0; i < args.length; i++) {
+    blake.blake2bUpdate(hasher, args[i]);
+  }
+  return blake.blake2bFinal(hasher);
+}
+
+/**
+ * Hash the given data key.
+ *
+ * @param datakey - Datakey to hash.
+ * @returns - Hash of the datakey.
+ */
+export function hashDataKey(datakey: string): Uint8Array {
+  return hashAll(encodeString(datakey));
+}
+
+/**
+ * Hashes the given registry entry.
+ *
+ * @param registryEntry - Registry entry to hash.
+ * @returns - Hash of the registry entry.
+ */
+export function hashRegistryEntry(registryEntry: RegistryEntry): Uint8Array {
+  return hashAll(
+    hashDataKey(registryEntry.datakey),
+    encodeString(registryEntry.data),
+    encodeBigintAsUint64(registryEntry.revision)
+  );
 }
 
 /**
